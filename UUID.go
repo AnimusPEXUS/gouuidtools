@@ -126,7 +126,7 @@ func (self *UUID) IsNil(val *UUID) bool {
 func (self *UUID) format(minuses bool) string {
 	var ret string
 	for i := 0; i != 16; i++ {
-		ret += fmt.Sprintf("%x", self.v[i])
+		ret += fmt.Sprintf("%0x", self.v[i])
 		if minuses {
 			switch i {
 			case 4, 6, 8, 10:
