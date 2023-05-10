@@ -7,23 +7,12 @@ import (
 	"strings"
 )
 
-type UUID [16]byte
+type UUID struct{ v [16]byte }
 
-var Nil UUID = [16]byte{}
-
-func Equal(v1 UUID, v2 UUID) bool {
-	for i := 0; i != 16; i++ {
-		if v1[i] != v2[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func NewUUIDFromString(val string) (UUID, error) {
+func NewUUIDFromString(val string) (*UUID, error) {
 
 	if len(val) > 128 {
-		return Nil, errors.New("unacceptable uuid string format")
+		return nil, errors.New("unacceptable uuid string format")
 	}
 
 	var val_new string
@@ -39,7 +28,7 @@ func NewUUIDFromString(val string) (UUID, error) {
 	}
 
 	if len(val_new) != 32 {
-		return Nil, errors.New("unacceptable uuid string format")
+		return nil, errors.New("unacceptable uuid string format")
 	}
 
 	val_new = strings.ToLower(val_new)
@@ -55,12 +44,12 @@ func NewUUIDFromString(val string) (UUID, error) {
 		val_new = val_new[2:]
 	}
 
-	return UUID(ret), nil
+	return &UUID{v: ret}, nil
 }
 
-func NewUUIDFromByteSlice(val []byte) (UUID, error) {
+func NewUUIDFromByteSlice(val []byte) (*UUID, error) {
 	if len(val) != 16 {
-		return Nil, errors.New("invalid byte slice")
+		return nil, errors.New("invalid byte slice")
 	}
 
 	var ret [16]byte
@@ -68,37 +57,76 @@ func NewUUIDFromByteSlice(val []byte) (UUID, error) {
 		ret[i] = val[i]
 	}
 
-	return UUID(ret), nil
+	return &UUID{v: ret}, nil
 }
 
-func NewUUIDFromByteArray(val [16]byte) UUID {
-	return UUID(val)
+func NewUUIDFromByteArray(val [16]byte) *UUID {
+	return &UUID{v: val}
 }
 
-func NewUUIDFromRandom() (UUID, error) {
+func NewUUIDFromRandom() (*UUID, error) {
 	ret := []byte{}
 	for len(ret) < 16 {
 		buf := make([]byte, 16)
 		x, err := rand.Read(buf)
 		if err != nil {
-			return Nil, err
+			return nil, err
 		}
 		ret = append(ret, buf[0:x]...)
 	}
 	return NewUUIDFromByteSlice(ret)
 }
 
-func (self UUID) Equal(val UUID) bool {
-	return Equal(self, val)
+func (self *UUID) Equal(val *UUID) bool {
+	for i := 0; i != 16; i++ {
+		if self.v[i] != val.v[i] {
+			return false
+		}
+	}
+	return true
 }
 
-func (self UUID) format(minuses bool) string {
+func (self *UUID) EqualByteSlice(val []byte) bool {
+	if len(val) != 16 {
+		return false
+	}
+	for i := 0; i != 16; i++ {
+		if self.v[i] != val[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func (self *UUID) EqualByteArray(val [16]byte) bool {
+	for i := 0; i != 16; i++ {
+		if self.v[i] != val[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func IsNil(val *UUID) bool {
+	for i := 0; i != 16; i++ {
+		if val.v[i] != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func (self *UUID) IsNil(val *UUID) bool {
+	return IsNil(self)
+}
+
+func (self *UUID) format(minuses bool) string {
 	var ret string
 	for i := 0; i != 16; i++ {
-		ret += fmt.Sprintf("%x", self[i])
+		ret += fmt.Sprintf("%x", self.v[i])
 		if minuses {
 			switch i {
-			case 3, 5, 7, 9:
+			case 4, 6, 8, 10:
 				ret += "-"
 			}
 		}
@@ -106,21 +134,21 @@ func (self UUID) format(minuses bool) string {
 	return ret
 }
 
-func (self UUID) Format() string {
+func (self *UUID) Format() string {
 	return self.format(true)
 }
 
-func (self UUID) FormatNoMinuses() string {
+func (self *UUID) FormatNoMinuses() string {
 	return self.format(false)
 }
 
-func (self UUID) ByteArray() [16]byte {
-	return [16]byte(self)
+func (self *UUID) ByteArray() [16]byte {
+	return self.v
 }
 
-func (self UUID) ByteSlice() []byte {
+func (self *UUID) ByteSlice() []byte {
 	ret := []byte{}
-	for _, i := range self {
+	for _, i := range self.v {
 		ret = append(ret, i)
 	}
 	return ret
