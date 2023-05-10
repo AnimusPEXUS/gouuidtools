@@ -93,17 +93,17 @@ func (self *UUID) SetVersion(val byte) error {
 	if val > 0b1111 {
 		return errors.New("invalid value")
 	}
-	b5 := self.v[5]
-	bx := (b5 << 4) >> 4
+	b6 := self.v[6]
+	bx := (b6 << 4) >> 4
 	bx2 := val << 4
 	bx2 += bx
-	self.v[5] = bx2
+	self.v[6] = bx2
 	return nil
 }
 
 func (self *UUID) GetVersion() byte {
-	b5 := self.v[5]
-	bt := b5 >> 4
+	b6 := self.v[6]
+	bt := b6 >> 4
 	return bt
 }
 
