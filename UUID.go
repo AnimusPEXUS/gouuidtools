@@ -89,7 +89,10 @@ func NewUUIDFromRandom() (*UUID, error) {
 	return ret_uuid, nil
 }
 
-func (self *UUID) SetVersion(val byte) {
+func (self *UUID) SetVersion(val byte) error {
+	if val > 0b1111 {
+		return errors.New("invalid value")
+	}
 	b5 := self.v[5]
 	bx := (b5 << 4) >> 4
 	bx2 := val << 4
