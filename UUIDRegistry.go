@@ -76,12 +76,14 @@ func (self *UUIDRegistry) Register(
 	lrc.LockMutex(self.ids_lock)
 	defer lrc.UnlockMutex(self.ids_lock)
 
+	defer runtime.SetFinalizer(val, self.unregister)
+
 	if self.Registered(val, lrc) {
 		return
 	}
 
 	self.ids = append(self.ids, val.ByteArray())
-	runtime.SetFinalizer(val, self.unregister)
+
 	return
 }
 
