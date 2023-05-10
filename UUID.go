@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-type UUID struct{ v [16]byte }
+type UUID struct {
+	v      [16]byte
+	Object any
+}
 
 func NewUUIDFromString(val string) (*UUID, error) {
 
