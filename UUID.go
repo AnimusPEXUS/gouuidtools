@@ -98,7 +98,7 @@ func (self *UUID) SetVersion(val byte) error {
 	bx2 := val << 4
 	bx2 += bx
 	self.v[5] = bx2
-	return
+	return nil
 }
 
 func (self *UUID) GetVersion() byte {
