@@ -81,7 +81,27 @@ func NewUUIDFromRandom() (*UUID, error) {
 		}
 		ret = append(ret, buf[0:x]...)
 	}
-	return NewUUIDFromByteSlice(ret)
+	ret_uuid, err := NewUUIDFromByteSlice(ret)
+	if err != nil {
+		return nil, err
+	}
+	ret_uuid.SetVersion(4)
+	return ret_uuid, nil
+}
+
+func (self *UUID) SetVersion(val byte) {
+	b5 := self.v[5]
+	bx := (b5 << 4) >> 4
+	bx2 := val << 4
+	bx2 += bx
+	self.v[5] = bx2
+	return
+}
+
+func (self *UUID) GetVersion() byte {
+	b5 := self.v[5]
+	bt := b5 >> 4
+	return bt
 }
 
 func (self *UUID) Equal(val *UUID) bool {
