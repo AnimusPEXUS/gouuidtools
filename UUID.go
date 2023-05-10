@@ -12,6 +12,10 @@ type UUID struct {
 	Object any
 }
 
+func NewUUIDNil() *UUID {
+	return &UUID{}
+}
+
 func NewUUIDFromString(val string) (*UUID, error) {
 
 	if len(val) > 128 {
@@ -41,7 +45,7 @@ func NewUUIDFromString(val string) (*UUID, error) {
 	counter := 0
 	for len(val_new) != 0 {
 		var scanned byte
-		fmt.Sscanf(val_new[:2], "%x", &scanned)
+		fmt.Sscanf(val_new[:2], "%02x", &scanned)
 		ret[counter] = scanned
 		counter++
 		val_new = val_new[2:]
@@ -126,10 +130,10 @@ func (self *UUID) IsNil(val *UUID) bool {
 func (self *UUID) format(minuses bool) string {
 	var ret string
 	for i := 0; i != 16; i++ {
-		ret += fmt.Sprintf("%0x", self.v[i])
+		ret += fmt.Sprintf("%02x", self.v[i])
 		if minuses {
 			switch i {
-			case 4, 6, 8, 10:
+			case 3, 5, 7, 9:
 				ret += "-"
 			}
 		}
