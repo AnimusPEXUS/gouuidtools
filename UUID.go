@@ -7,10 +7,7 @@ import (
 	"strings"
 )
 
-type UUID struct {
-	v      [16]byte
-	Object any
-}
+type UUID struct{ v [16]byte }
 
 func NewUUIDNil() *UUID {
 	return &UUID{}
