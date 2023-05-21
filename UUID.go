@@ -13,6 +13,7 @@ func NewUUIDNil() *UUID {
 	return &UUID{}
 }
 
+// returns errors only if parse failed.
 func NewUUIDFromString(val string) (*UUID, error) {
 
 	if len(val) > 128 {
@@ -143,7 +144,7 @@ func IsNil(val *UUID) bool {
 	return true
 }
 
-func (self *UUID) IsNil(val *UUID) bool {
+func (self *UUID) IsNil() bool {
 	return IsNil(self)
 }
 
