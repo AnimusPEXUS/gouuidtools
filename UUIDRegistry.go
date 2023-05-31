@@ -18,7 +18,11 @@ func NewUUIDRegistry() (*UUIDRegistry, error) {
 	return self, nil
 }
 
-func (self *UUIDRegistry) GenUUID(
+func (self *UUIDRegistry) GenUUID() (*UUID, error) {
+	return self.GenUUID_lrc(nil)
+}
+
+func (self *UUIDRegistry) GenUUID_lrc(
 	lrc *golockerreentrancycontext.LockerReentrancyContext,
 ) (*UUID, error) {
 	if lrc == nil {
@@ -37,18 +41,22 @@ main_loop:
 			return nil, err
 		}
 
-		if self.Registered(ret, lrc) {
+		if self.Registered_lrc(ret, lrc) {
 			continue main_loop
 		}
 		break
 	}
 
-	self.Register(ret, lrc)
+	self.Register_lrc(ret, lrc)
 
 	return ret, nil
 }
 
-func (self *UUIDRegistry) Registered(
+func (self *UUIDRegistry) Registered(val *UUID) bool {
+	return self.Registered_lrc(val, nil)
+}
+
+func (self *UUIDRegistry) Registered_lrc(
 	val *UUID,
 	lrc *golockerreentrancycontext.LockerReentrancyContext,
 ) bool {
@@ -66,7 +74,11 @@ func (self *UUIDRegistry) Registered(
 	return false
 }
 
-func (self *UUIDRegistry) Register(
+func (self *UUIDRegistry) Register(val *UUID) {
+	self.Register_lrc(val, nil)
+}
+
+func (self *UUIDRegistry) Register_lrc(
 	val *UUID,
 	lrc *golockerreentrancycontext.LockerReentrancyContext,
 ) {
@@ -76,9 +88,9 @@ func (self *UUIDRegistry) Register(
 	lrc.LockMutex(self.ids_lock)
 	defer lrc.UnlockMutex(self.ids_lock)
 
-	defer runtime.SetFinalizer(val, self.unregister)
+	defer runtime.SetFinalizer(val, self.Unregister)
 
-	if self.Registered(val, lrc) {
+	if self.Registered_lrc(val, lrc) {
 		return
 	}
 
@@ -87,12 +99,11 @@ func (self *UUIDRegistry) Register(
 	return
 }
 
-func (self *UUIDRegistry) unregister(val *UUID) {
-	self.Unregister(val, nil)
-	return
+func (self *UUIDRegistry) Unregister(val *UUID) {
+	self.Unregister_lrc(val, nil)
 }
 
-func (self *UUIDRegistry) Unregister(
+func (self *UUIDRegistry) Unregister_lrc(
 	val *UUID,
 	lrc *golockerreentrancycontext.LockerReentrancyContext,
 ) {
