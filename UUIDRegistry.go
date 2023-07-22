@@ -2,34 +2,25 @@ package gouuidtools
 
 import (
 	"runtime"
-	"sync"
 
-	"github.com/AnimusPEXUS/golockerreentrancycontext"
+	"github.com/AnimusPEXUS/goreentrantlock"
 )
 
 type UUIDRegistry struct {
 	ids      [][16]byte
-	ids_lock *sync.Mutex
+	ids_lock *goreentrantlock.ReentrantMutexCheckable
 }
 
 func NewUUIDRegistry() (*UUIDRegistry, error) {
 	self := new(UUIDRegistry)
-	self.ids_lock = &sync.Mutex{}
+	self.ids_lock = goreentrantlock.NewReentrantMutexCheckable(false)
 	return self, nil
 }
 
 func (self *UUIDRegistry) GenUUID() (*UUID, error) {
-	return self.GenUUID_lrc(nil)
-}
 
-func (self *UUIDRegistry) GenUUID_lrc(
-	lrc *golockerreentrancycontext.LockerReentrancyContext,
-) (*UUID, error) {
-	if lrc == nil {
-		lrc = new(golockerreentrancycontext.LockerReentrancyContext)
-	}
-	lrc.LockMutex(self.ids_lock)
-	defer lrc.UnlockMutex(self.ids_lock)
+	self.ids_lock.Lock()
+	defer self.ids_lock.Unlock()
 
 	var ret *UUID
 	var err error
@@ -41,30 +32,21 @@ main_loop:
 			return nil, err
 		}
 
-		if self.Registered_lrc(ret, lrc) {
+		if self.Registered(ret) {
 			continue main_loop
 		}
 		break
 	}
 
-	self.Register_lrc(ret, lrc)
+	self.Register(ret)
 
 	return ret, nil
 }
 
 func (self *UUIDRegistry) Registered(val *UUID) bool {
-	return self.Registered_lrc(val, nil)
-}
 
-func (self *UUIDRegistry) Registered_lrc(
-	val *UUID,
-	lrc *golockerreentrancycontext.LockerReentrancyContext,
-) bool {
-	if lrc == nil {
-		lrc = new(golockerreentrancycontext.LockerReentrancyContext)
-	}
-	lrc.LockMutex(self.ids_lock)
-	defer lrc.UnlockMutex(self.ids_lock)
+	self.ids_lock.Lock()
+	defer self.ids_lock.Unlock()
 
 	for _, x := range self.ids {
 		if val.EqualByteArray(x) {
@@ -75,43 +57,25 @@ func (self *UUIDRegistry) Registered_lrc(
 }
 
 func (self *UUIDRegistry) Register(val *UUID) {
-	self.Register_lrc(val, nil)
-}
-
-func (self *UUIDRegistry) Register_lrc(
-	val *UUID,
-	lrc *golockerreentrancycontext.LockerReentrancyContext,
-) {
-	if lrc == nil {
-		lrc = new(golockerreentrancycontext.LockerReentrancyContext)
-	}
-	lrc.LockMutex(self.ids_lock)
-	defer lrc.UnlockMutex(self.ids_lock)
+	self.ids_lock.Lock()
+	defer self.ids_lock.Unlock()
 
 	defer runtime.SetFinalizer(val, self.Unregister)
 
-	if self.Registered_lrc(val, lrc) {
+	if self.Registered(val) {
 		return
 	}
 
 	self.ids = append(self.ids, val.ByteArray())
 
 	return
+
 }
 
 func (self *UUIDRegistry) Unregister(val *UUID) {
-	self.Unregister_lrc(val, nil)
-}
 
-func (self *UUIDRegistry) Unregister_lrc(
-	val *UUID,
-	lrc *golockerreentrancycontext.LockerReentrancyContext,
-) {
-	if lrc == nil {
-		lrc = new(golockerreentrancycontext.LockerReentrancyContext)
-	}
-	lrc.LockMutex(self.ids_lock)
-	defer lrc.UnlockMutex(self.ids_lock)
+	self.ids_lock.Lock()
+	defer self.ids_lock.Unlock()
 
 	for i := len(self.ids) - 1; i != -1; i-- {
 		if val.EqualByteArray(self.ids[i]) {
